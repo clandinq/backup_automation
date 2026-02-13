@@ -1,0 +1,6 @@
+runtime/backup.log
+runtime/git_sync.log
+runtime/backup_last_run
+runtime/git_last_run
+
+.DS_Store
