@@ -14,6 +14,20 @@ log() {
   printf '%s [backup] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$LOG_FILE"
 }
 
+run_copy() {
+  local src="$1"
+  local dst="$2"
+
+  log "Starting backup: $src -> $dst"
+  if "$RCLONE_BIN" copy "$src" "$dst" "${exclude_args[@]}" "${rclone_args[@]}" >> "$LOG_FILE" 2>&1; then
+    log "Completed backup: $src -> $dst"
+    return 0
+  fi
+
+  log "ERROR: backup failed for $src"
+  return 1
+}
+
 today="$(date +%F)"
 hour="$(date +%H)"
 
@@ -47,7 +61,13 @@ fi
 
 exclude_args=(
   --exclude ".git/**"
+  --exclude "**/.git/**"
+  --exclude ".DS_Store"
   --exclude "**/.DS_Store"
+  --exclude "~\$*"
+  --exclude "**/~\$*"
+  --exclude "._*"
+  --exclude "**/._*"
   --exclude "**/.ipynb_checkpoints/**"
   --exclude "**/__pycache__/**"
   --exclude "**/.pytest_cache/**"
@@ -59,15 +79,25 @@ exclude_args=(
   --exclude "**/*~"
 )
 
-log "Starting backup: $HOME/research -> dropbox:research"
-if ! "$RCLONE_BIN" copy "$HOME/research" "dropbox:research" "${exclude_args[@]}" >> "$LOG_FILE" 2>&1; then
-  log "ERROR: backup failed for $HOME/research"
-  exit 1
-fi
+# Keep Dropbox API pressure low to avoid "too_many_write_operations" failures.
+rclone_args=(
+  --checkers 4
+  --transfers 2
+  --retries 12
+  --low-level-retries 25
+  --retries-sleep 10s
+  --tpslimit 6
+  --tpslimit-burst 6
+  --dropbox-batch-mode off
+)
 
-log "Starting backup: $HOME/projects -> dropbox:projects"
-if ! "$RCLONE_BIN" copy "$HOME/projects" "dropbox:projects" "${exclude_args[@]}" >> "$LOG_FILE" 2>&1; then
-  log "ERROR: backup failed for $HOME/projects"
+failures=0
+
+run_copy "$HOME/research" "dropbox:research" || failures=$((failures + 1))
+run_copy "$HOME/projects" "dropbox:projects" || failures=$((failures + 1))
+
+if [[ "$failures" -gt 0 ]]; then
+  log "Backup finished with failures in $failures root(s)."
   exit 1
 fi
 
