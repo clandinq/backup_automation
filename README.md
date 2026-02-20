@@ -74,3 +74,6 @@ Automated Dropbox & Github Project Sync is a macOS automation setup that runs un
 - `path/disallowed_name`: temporary Office files (`~$...`) are excluded, but remove/close problematic temp files if errors persist.
 - Backup not reaching `projects`: check `runtime/backup.log` for failures during the `research` stage.
 - Git sync failures: inspect `runtime/git_sync.log` for auth errors or `pull --ff-only` conflicts.
+
+## For AI Agents
+- Implementation and validation instructions: `AGENT_IMPLEMENTATION.md`
