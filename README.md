@@ -76,4 +76,4 @@ Automated Dropbox & Github Project Sync is a macOS automation setup that runs un
 - Git sync failures: inspect `runtime/git_sync.log` for auth errors or `pull --ff-only` conflicts.
 
 ## For AI Agents
-- Implementation and validation instructions: `AGENT_IMPLEMENTATION.md`
+- You can set up this system with an AI agent by copying the [implementation and validation instructions](AGENT_IMPLEMENTATION.md) to a conversation using plan mode.
